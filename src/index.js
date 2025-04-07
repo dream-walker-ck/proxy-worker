@@ -8,7 +8,7 @@ app.get('/', async (c) => {
 	return c.text('Welcome!');
 });
 
-app.get('/api/posts/:slug/testimonials', async (c) => {
+app.get('/api/:slug/testimonials', async (c) => {
 	const { slug } = c.req.param();
 
 	const { results } = await c.env.DB.prepare(
@@ -22,7 +22,7 @@ app.get('/api/posts/:slug/testimonials', async (c) => {
 	return c.json(results);
 });
 
-app.post('/api/posts/:slug/testimonials', async (c) => {
+app.post('/api/:slug/testimonials', async (c) => {
 	const { slug } = c.req.param();
 	const { quote, author, role, company, image } = await c.req.json();
 
@@ -49,26 +49,18 @@ app.post('/api/posts/:slug/testimonials', async (c) => {
 	}
 });
 
-app.delete('/api/posts/:slug/testimonials/:id', async (c) => {
+app.delete('/api/:slug/testimonials/:id', async (c) => {
 	const { slug, id } = c.req.param();
 
 	// First verify that the testimonial exists and belongs to the specified slug
-	const existing = await c.env.DB.prepare(
-		`SELECT id FROM testimonials WHERE id = ? AND post_slug = ?`
-	)
-		.bind(id, slug)
-		.first();
+	const existing = await c.env.DB.prepare(`SELECT id FROM testimonials WHERE id = ? AND post_slug = ?`).bind(id, slug).first();
 
 	if (!existing) {
 		c.status(404);
 		return c.text('Testimonial not found or does not belong to this post');
 	}
 
-	const { success } = await c.env.DB.prepare(
-		`DELETE FROM testimonials WHERE id = ?`
-	)
-		.bind(id)
-		.run();
+	const { success } = await c.env.DB.prepare(`DELETE FROM testimonials WHERE id = ?`).bind(id).run();
 
 	if (success) {
 		return c.text('Deleted');
